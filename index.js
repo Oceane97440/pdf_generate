@@ -27,6 +27,7 @@ app.get('/', async function (req, res) {
         });
         const page = await browser.newPage();
         const url = 'https://reporting.antennesb.fr/';
+        res.setHeader("Content-Type", "application/pdf");
 
         //We load the page, one of my blog post (networkidle0 means we're waiting for the network to stop making new calls for 500ms
         await page.goto(url, {
