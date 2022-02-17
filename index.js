@@ -13,7 +13,7 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', async function (req, res) {
 
    
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.goto('https://reporting.antennesb.fr/', {
       waitUntil: 'networkidle2',
