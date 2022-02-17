@@ -12,40 +12,46 @@ app.use(express.static(__dirname + '/public'));
 
 
 app.get('/', async function (req, res) {
-
-    async function generatePDF() {
-
-        //We start a new browser, without showing UI
-        const browser = await puppeteer.launch({
-            args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--single-process"
     
-            ],
-        });
-        const page = await browser.newPage();
-        const url = 'https://reporting.antennesb.fr/';
-        res.setHeader("Content-Type", "application/pdf");
+    try {
+        async function generatePDF() {
 
-        //We load the page, one of my blog post (networkidle0 means we're waiting for the network to stop making new calls for 500ms
-        await page.goto(url, {
-            waitUntil: 'networkidle0'
-        });
-
-
-
-        //Let's generate the pdf and close the browser
-        const pdf = await page.pdf({
-            path: "article.pdf",
-            format: 'A4'
-        });
-        await browser.close();
-        return res.send(pdf);
+            //We start a new browser, without showing UI
+            const browser = await puppeteer.launch({
+                args: [
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--single-process"
+        
+                ],
+            });
+            const page = await browser.newPage();
+            const url = 'https://reporting.antennesb.fr/';
+            res.setHeader("Content-Type", "application/pdf");
+    
+            //We load the page, one of my blog post (networkidle0 means we're waiting for the network to stop making new calls for 500ms
+            await page.goto(url, {
+                waitUntil: 'networkidle0'
+            });
+    
+    
+    
+            //Let's generate the pdf and close the browser
+            const pdf = await page.pdf({
+                path: "article.pdf",
+                format: 'A4'
+            });
+            await browser.close();
+            return res.send(pdf);
+        }
+    
+        generatePDF();
+    } catch (error) {
+        res.send(`❌ Error: ${error.message}`);    
     }
 
-    generatePDF();
+  
 
 
 
