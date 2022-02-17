@@ -17,7 +17,13 @@ app.get('/', async function (req, res) {
 
         //We start a new browser, without showing UI
         const browser = await puppeteer.launch({
-            headless: true
+            args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--single-process"
+    
+            ],
         });
         const page = await browser.newPage();
         const url = 'https://reporting.antennesb.fr/';
@@ -26,8 +32,8 @@ app.get('/', async function (req, res) {
         await page.goto(url, {
             waitUntil: 'networkidle0'
         });
-     
-        
+
+
 
         //Let's generate the pdf and close the browser
         const pdf = await page.pdf({
@@ -51,16 +57,27 @@ app.get('/export', async function (req, res) {
     // add stealth plugin and use defaults (all evasion techniques)
     const StealthPlugin = require('puppeteer-extra-plugin-stealth')
     puppeteer_extra.use(StealthPlugin())
-    
+
     // puppeteer usage as normal
-    puppeteer_extra.launch({ headless: true }).then(async browser => {
-      console.log('Running tests..')
-      const page = await browser.newPage()
-      await page.goto('https://reporting.antennesb.fr/')
-      await page.waitForTimeout(5000)
-      const pdf = await page.pdf({ path: 'testresult.pdf', fullPage: true })
-      await browser.close()
-      res.send(pdf)
+    puppeteer_extra.launch({
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--single-process"
+
+        ],
+    }).then(async browser => {
+        console.log('Running tests..')
+        const page = await browser.newPage()
+        await page.goto('https://reporting.antennesb.fr/')
+        await page.waitForTimeout(5000)
+        const pdf = await page.pdf({
+            path: 'testresult.pdf',
+            fullPage: true
+        })
+        await browser.close()
+        res.send(pdf)
     })
 
 
