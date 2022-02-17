@@ -3,6 +3,7 @@ const app = express();
 const path = require('path');
 const cors = require('cors');
 const puppeteer = require('puppeteer')
+const puppeteer_extra = require('puppeteer-extra')
 
 app.use(cors());
 app.use(express.static('files'));
@@ -44,7 +45,28 @@ app.get('/', async function (req, res) {
 
 });
 
+app.get('/export', async function (req, res) {
 
+
+    // add stealth plugin and use defaults (all evasion techniques)
+    const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+    puppeteer_extra.use(StealthPlugin())
+    
+    // puppeteer usage as normal
+    puppeteer_extra.launch({ headless: true }).then(async browser => {
+      console.log('Running tests..')
+      const page = await browser.newPage()
+      await page.goto('https://reporting.antennesb.fr/')
+      await page.waitForTimeout(5000)
+      const pdf = await page.pdf({ path: 'testresult.pdf', fullPage: true })
+      await browser.close()
+      res.send(pdf)
+    })
+
+
+
+
+});
 
 // Le serveur ecoute sur le port 3022
 app.set("port", process.env.PORT || 3001);
