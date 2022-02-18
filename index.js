@@ -108,7 +108,7 @@ app.get('/proxy', async function (req, res) {
                 ignoreHTTPSErrors: true,
                 headless: false,
                 args: [
-                    '--proxy-server=localhost:3OO1'
+                    '--proxy-server=https://generate-filepdf.herokuapp.com/'
                 ]
             });
             const page = await browser.newPage({
