@@ -17,9 +17,11 @@
   },
   "homepage": "https://github.com/Oceane97440/pdf_generate#readme",
   "dependencies": {
+    "@adobe/pdfservices-node-sdk": "^2.2.1",
     "chromium": "^3.0.3",
     "cors": "^2.8.5",
     "express": "^4.17.3",
+    "nodemon": "^2.0.15",
     "path": "^0.12.7",
     "puppeteer": "^13.3.2",
     "puppeteer-extra": "^3.2.3",

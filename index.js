@@ -3,6 +3,8 @@ const app = express();
 const path = require('path');
 const cors = require('cors');
 const puppeteer = require('puppeteer')
+const PDFServicesSdk = require('@adobe/pdfservices-node-sdk');
+
 //const puppeteer_extra = require('puppeteer-extra')
 //const puppeteer_proxy = require('puppeteer-proxy')
 //const proxyRequest = require('puppeteer-proxy')
@@ -17,39 +19,56 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', async function (req, res) {
 
     try {
-        async function generatePDF() {
 
-            //We start a new browser, without showing UI
-            const browser = await puppeteer.launch({
-                args: [
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--single-process"
+        const setCustomOptions = (htmlToPDFOperation) => {
+            // Define the page layout, in this case an 8 x 11.5 inch page (effectively portrait orientation).
+            const pageLayout = new PDFServicesSdk.CreatePDF.options.html.PageLayout();
+            pageLayout.setPageSize(20, 25);
 
-                ],
+            // Set the desired HTML-to-PDF conversion options.
+            const htmlToPdfOptions = new PDFServicesSdk.CreatePDF.options.html.CreatePDFFromHtmlOptions.Builder()
+                .includesHeaderFooter(true)
+                .withPageLayout(pageLayout)
+                .build();
+            htmlToPDFOperation.setOptions(htmlToPdfOptions);
+        };
+
+        // Initial setup, create credentials instance.
+        const credentials = PDFServicesSdk.Credentials
+            .serviceAccountCredentialsBuilder()
+            .fromFile("pdfservices-api-credentials.json")
+            .build();
+
+        // Create an ExecutionContext using credentials and create a new operation instance.
+        const executionContext = PDFServicesSdk.ExecutionContext.create(credentials),
+            createPDF = PDFServicesSdk.CreatePDF,
+            htmlToPDFOperation = createPDF.Operation.createNew();
+
+        // Set operation input from a source URL.
+        const input = PDFServicesSdk.FileRef.createFromURL(
+            "https://developer.adobe.com/document-services/docs/overview/"
+        );
+        htmlToPDFOperation.setInput(input);
+
+        // Provide any custom configuration options for the operation.
+        setCustomOptions(htmlToPDFOperation);
+
+        // Execute the operation and Save the result to the specified location.
+        htmlToPDFOperation.execute(executionContext)
+        .then(result => {
+            result.saveAsFile('output/bilan_campagne.pdf')
+            console.log(result)
+            res.send('ok')
+
+        }).catch(err => {
+                if (err instanceof PDFServicesSdk.Error.ServiceApiError ||
+                    err instanceof PDFServicesSdk.Error.ServiceUsageError) {
+                    console.log('Exception encountered while executing operation', err);
+                } else {
+                    console.log('Exception encountered while executing operation', err);
+                }
             });
-            const page = await browser.newPage();
-            const url = 'https://reporting.antennesb.fr/';
-            res.setHeader("Content-Type", "application/pdf");
 
-            //We load the page, one of my blog post (networkidle0 means we're waiting for the network to stop making new calls for 500ms
-            await page.goto(url, {
-                waitUntil: 'networkidle0'
-            });
-
-
-
-            //Let's generate the pdf and close the browser
-            const pdf = await page.pdf({
-                path: "article.pdf",
-                format: 'A4'
-            });
-            await browser.close();
-            return res.send(pdf);
-        }
-
-        generatePDF();
     } catch (error) {
         res.send(`❌ Error: ${error.message}`);
     }
@@ -96,55 +115,6 @@ app.get('/export', async function (req, res) {
 });
 
 
-app.get('/proxy', async function (req, res) {
-
-    try {
-
-      
-      
-
-        (async () => {
-            const browser = await puppeteer.launch({
-                ignoreHTTPSErrors: true,
-                headless: false,
-                args: [
-                    '--proxy-server=https://generate-filepdf.herokuapp.com/'
-                ]
-            });
-            const page = await browser.newPage({
-                ignoreHTTPSErrors: true
-            });
-
-            console.log('Opening page ...');
-            try {
-
-                await page.goto('https://toscrape.com/', {timeout: 180000});
-            } catch (err) {
-                console.log(err);
-            }
-
-            console.log('Taking a screenshot ...');
-            /*const pdf = await page.pdf({
-                path: "article.pdf",
-                format: 'A4'
-            });*/
-           const pdf = await page.screenshot({path: 'screenshot.png'});
-
-            await browser.close();
-            return res.send(pdf);
-
-        })();
-
-    } catch (error) {
-        res.send(`❌ Error: ${error.message}`);
-    }
-
-
-
-
-
-
-});
 
 // Le serveur ecoute sur le port 3022
 app.set("port", process.env.PORT || 3001);
